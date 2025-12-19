@@ -1,22 +1,21 @@
 import { GoogleGenAI, Type } from "@google/genai";
 
-let ai: GoogleGenAI | null = null;
-
-if (process.env.API_KEY) {
-  ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-}
-
 /**
  * Uses Gemini to understand the user's medical intent and returns a list of keywords
  * and categories to filter the local database.
  */
-export const expandSearchQuery = async (userQuery: string, availableCategories: string[]): Promise<string[]> => {
-  if (!ai) {
-    console.warn("Gemini API Key not found. Falling back to exact match.");
+export const expandSearchQuery = async (
+  userQuery: string, 
+  availableCategories: string[],
+  apiKey?: string
+): Promise<string[]> => {
+  if (!apiKey) {
+    console.warn("No Gemini API Key provided. Skipping AI search.");
     return [userQuery];
   }
 
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const model = 'gemini-2.5-flash';
     const categoriesString = availableCategories.slice(0, 50).join(', '); 
 

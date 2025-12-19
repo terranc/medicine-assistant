@@ -8,6 +8,7 @@ interface HeroSearchProps {
   activeTag: string | null;
   onTagSelect: (tag: string | null) => void;
   currentQuery?: string;
+  onOpenSettings: () => void;
 }
 
 export const HeroSearch: React.FC<HeroSearchProps> = ({ 
@@ -16,7 +17,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   tags, 
   activeTag,
   onTagSelect,
-  currentQuery = ''
+  currentQuery = '',
+  onOpenSettings
 }) => {
   const [query, setQuery] = useState(currentQuery);
   const [useAi, setUseAi] = useState(false);
@@ -63,11 +65,19 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   return (
     <>
       {/* Top Hero Content: Title, Desc, Tags */}
-      {/* 
-         We removed the outer wrapper so the sticky element can use the main app container 
-         as its scroll boundary. We keep the background class here for visual consistency.
-      */}
-      <div className="bg-slate-50/50">
+      <div className="bg-slate-50/50 relative">
+        {/* Settings Button - Top Right */}
+        <button
+          onClick={onOpenSettings}
+          className="absolute top-4 right-4 md:right-8 p-2 rounded-full text-muted-foreground hover:bg-slate-200/50 hover:text-primary transition-colors cursor-pointer z-10"
+          title="设置 API Key"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.38a2 2 0 0 0-.73-2.73l-.15-.1a2 2 0 0 1-1-1.72v-.51a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+
         <div className="container px-4 md:px-6 pt-10 md:pt-16 pb-2 flex flex-col items-center">
           <div className="text-center mx-auto w-full animate-in fade-in slide-in-from-bottom-4 duration-500">
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter sm:text-5xl text-primary mb-4">
@@ -133,12 +143,6 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       </div>
 
       {/* Sticky Search Container */}
-      {/* 
-         - top-0: Stick to the top of the viewport.
-         - z-50: Keeps it above content.
-         - Uses 'sticky' positioning. Because it's now a direct child of the App container 
-           (via Fragment), it will stick for the entire height of the App container.
-      */}
       <div 
         ref={stickyRef}
         className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out ${
@@ -153,7 +157,6 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
           }`}>
             
             {/* Mini Title - Slides in when stuck */}
-            {/* Added h-10 to match input height for strict vertical alignment */}
             <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] flex items-center h-10 ${
               isStuck ? 'w-auto opacity-100 mr-4 max-w-[200px]' : 'w-0 opacity-0 max-w-0'
             }`}>
@@ -162,7 +165,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
               </h1>
             </div>
 
-            {/* The Search Form - Flex 1 to fill available space */}
+            {/* The Search Form */}
             <form onSubmit={handleSubmit} className="flex-1 w-full mb-0">
                <div className="flex gap-2 w-full">
                 <div className="relative flex-1">
@@ -175,7 +178,8 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
-                {/* 
+                
+                {/* AI Button Restored */}
                 <button
                   type="button"
                   onClick={() => setUseAi(!useAi)}
@@ -189,7 +193,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   <span className="sm:hidden">AI</span>
                   <span className="ml-1.5 text-xs opacity-70">{useAi ? 'ON' : 'OFF'}</span>
                 </button>
-                */}
+                
                 <button
                   type="submit"
                   disabled={isSearching}

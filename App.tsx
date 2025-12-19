@@ -4,6 +4,7 @@ import { expandSearchQuery } from './services/geminiService';
 import { Medicine } from './types';
 import { MedicineCard } from './components/MedicineCard';
 import { HeroSearch } from './components/HeroSearch';
+import { ApiKeyModal } from './components/ApiKeyModal';
 
 const App: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -14,8 +15,25 @@ const App: React.FC = () => {
   const [isAiSearchMode, setIsAiSearchMode] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   
+  // Settings & API Key State
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [apiKey, setApiKey] = useState('');
+
   // Changed from activeCategory to activeTag
   const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  // Load API Key from localStorage on mount
+  useEffect(() => {
+    const storedKey = localStorage.getItem('gemini_api_key');
+    if (storedKey) {
+      setApiKey(storedKey);
+    }
+  }, []);
+
+  const handleSaveApiKey = (key: string) => {
+    setApiKey(key);
+    localStorage.setItem('gemini_api_key', key);
+  };
 
   useEffect(() => {
     const loadData = async () => {
@@ -45,11 +63,19 @@ const App: React.FC = () => {
     }
 
     if (useAi) {
+      if (!apiKey) {
+        // If AI is enabled but no key, open settings and don't perform AI search yet
+        setIsSettingsOpen(true);
+        // Fallback to normal search (we don't clear setIsAiSearchMode because we want to indicate intent)
+        setAiKeywords([query]);
+        return;
+      }
+
       setIsSearching(true);
       // Clear previous keywords to avoid filtering with old keywords while new query is set
       setAiKeywords([]); 
       try {
-        const keywords = await expandSearchQuery(query, categories);
+        const keywords = await expandSearchQuery(query, categories, apiKey);
         setAiKeywords(keywords);
       } catch (e) {
         console.error("AI Search failed, falling back to basic");
@@ -60,7 +86,7 @@ const App: React.FC = () => {
     } else {
       setAiKeywords([]);
     }
-  }, [categories]);
+  }, [categories, apiKey]);
 
   const filteredMedicines = useMemo(() => {
     let result = medicines;
@@ -106,6 +132,14 @@ const App: React.FC = () => {
         activeTag={activeTag}
         onTagSelect={setActiveTag}
         currentQuery={searchQuery}
+        onOpenSettings={() => setIsSettingsOpen(true)}
+      />
+
+      <ApiKeyModal 
+        isOpen={isSettingsOpen}
+        onClose={() => setIsSettingsOpen(false)}
+        onSave={handleSaveApiKey}
+        currentKey={apiKey}
       />
 
       <main className="flex-1 container py-8">
