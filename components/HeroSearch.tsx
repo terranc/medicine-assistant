@@ -73,8 +73,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter sm:text-5xl text-primary mb-4">
               原研药查询助手
             </h1>
+            {/* 
             <p className="text-muted-foreground md:text-lg max-w-2xl mx-auto mb-6">
               收录全面的参比制剂（RLD）信息。支持基于 AI 的语义模糊搜索，帮助您快速找到目标药品。
+            </p> 
+            */}
+            <p className="text-muted-foreground md:text-lg max-w-2xl mx-auto mb-6">
+              收录全面的参比制剂（RLD）信息，帮助您快速找到目标药品。
             </p>
 
             {/* Tags Area - Now Above Search */}
@@ -170,6 +175,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                     className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                 </div>
+                {/* 
                 <button
                   type="button"
                   onClick={() => setUseAi(!useAi)}
@@ -183,6 +189,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   <span className="sm:hidden">AI</span>
                   <span className="ml-1.5 text-xs opacity-70">{useAi ? 'ON' : 'OFF'}</span>
                 </button>
+                */}
                 <button
                   type="submit"
                   disabled={isSearching}

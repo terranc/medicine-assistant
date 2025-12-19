@@ -1,6 +1,20 @@
-# 原研药查询助手
+<div align="center">
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+</div>
+
+# Run and deploy your AI Studio app
+
+This contains everything you need to run your app locally.
+
+View your app in AI Studio: https://ai.studio/apps/drive/19nRkF74_lhhisrLn8mh7a7HhB_A4iU9x
+
+## Run Locally
+
+**Prerequisites:**  Node.js
 
 
-![屏幕截图_20-12-2025_35757_aistudio google com](https://github.com/user-attachments/assets/2b6bbcfd-f8ab-4d9c-907d-dbe4c2f67d00)
-
-> 数据来源：[https://github.com/terranc/medicine-assistant](https://github.com/terranc/medicine-assistant)
+1. Install dependencies:
+   `npm install`
+2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
+3. Run the app:
+   `npm run dev`
