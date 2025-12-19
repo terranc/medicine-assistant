@@ -5,6 +5,7 @@ import { Medicine } from './types';
 import { MedicineCard } from './components/MedicineCard';
 import { HeroSearch } from './components/HeroSearch';
 import { ApiKeyModal } from './components/ApiKeyModal';
+import { OnboardingOverlay } from './components/OnboardingOverlay';
 
 const App: React.FC = () => {
   const [medicines, setMedicines] = useState<Medicine[]>([]);
@@ -18,6 +19,7 @@ const App: React.FC = () => {
   // Settings & API Key State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Changed from activeCategory to activeTag
   const [activeTag, setActiveTag] = useState<string | null>(null);
@@ -64,8 +66,11 @@ const App: React.FC = () => {
 
     if (useAi) {
       if (!apiKey) {
-        // If AI is enabled but no key, open settings and don't perform AI search yet
-        setIsSettingsOpen(true);
+        // If AI is enabled but no key, show onboarding overlay
+        // Scroll to top to ensure the settings button is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setShowOnboarding(true);
+        
         // Fallback to normal search (we don't clear setIsAiSearchMode because we want to indicate intent)
         setAiKeywords([query]);
         return;
@@ -134,6 +139,10 @@ const App: React.FC = () => {
         currentQuery={searchQuery}
         onOpenSettings={() => setIsSettingsOpen(true)}
       />
+
+      {showOnboarding && (
+        <OnboardingOverlay onClose={() => setShowOnboarding(false)} />
+      )}
 
       <ApiKeyModal 
         isOpen={isSettingsOpen}
