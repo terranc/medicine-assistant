@@ -1,0 +1,5 @@
+{
+  "name": "原研药查询助手",
+  "description": "基于 AI 的原研药（参比制剂）智能查询与分类目录。",
+  "requestFramePermissions": []
+}
