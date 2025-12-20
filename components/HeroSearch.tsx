@@ -25,7 +25,13 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   onShowOnboarding
 }) => {
   const [query, setQuery] = useState(currentQuery);
-  const [useAi, setUseAi] = useState(false);
+  // Initialize from localStorage, default to false if not set
+  const [useAi, setUseAi] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('medicine_app_use_ai') === 'true';
+    }
+    return false;
+  });
   const [isStuck, setIsStuck] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const stickyRef = useRef<HTMLDivElement>(null);
@@ -64,7 +70,10 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
       onShowOnboarding();
       return; // Keep state as OFF
     }
-    setUseAi(!useAi);
+    
+    const newState = !useAi;
+    setUseAi(newState);
+    localStorage.setItem('medicine_app_use_ai', String(newState));
   };
 
   // New handler for clearing search
