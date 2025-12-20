@@ -16,11 +16,52 @@ export const expandSearchQuery = async (
   }
 
   try {
-    // If baseUrl is provided (and valid), use it; otherwise default to Google's official endpoint.
-    // The SDK allows passing baseUrl in the constructor options.
     const clientOptions: any = { apiKey };
-    if (baseUrl && baseUrl.trim().startsWith('http')) {
-        clientOptions.baseUrl = baseUrl.trim();
+    
+    // Normalize Base URL: remove trailing slash
+    let customBaseUrl = baseUrl?.trim();
+    if (customBaseUrl?.endsWith('/')) {
+      customBaseUrl = customBaseUrl.slice(0, -1);
+    }
+
+    // Configure client with custom baseUrl and fetch interceptor
+    if (customBaseUrl && customBaseUrl.startsWith('http')) {
+        // 1. Set the baseUrl property (Standard SDK support)
+        clientOptions.baseUrl = customBaseUrl;
+
+        // 2. Add a robust fetch interceptor (Fallback/Enforcement)
+        // This ensures that even if the SDK ignores 'baseUrl' or constructs absolute URLs internally,
+        // we intercept the network call and rewrite the host.
+        clientOptions.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+            // Determine the current URL string
+            let urlStr: string;
+            if (typeof input === 'string') {
+                urlStr = input;
+            } else if (input instanceof URL) {
+                urlStr = input.toString();
+            } else {
+                urlStr = input.url;
+            }
+
+            // Check if the request is targeting the official Google API
+            const defaultHost = 'https://generativelanguage.googleapis.com';
+            if (urlStr.startsWith(defaultHost) && customBaseUrl) {
+                // Replace the official host with the custom proxy host
+                urlStr = urlStr.replace(defaultHost, customBaseUrl);
+            }
+
+            // Perform the fetch with the new URL
+            if (input instanceof Request) {
+                // Critical: If input is a Request object, we must clone it to preserve
+                // method (POST), headers (Auth), and body (JSON payload).
+                // Passing 'input' as the second argument to Request constructor copies these properties.
+                const newReq = new Request(urlStr, input);
+                return fetch(newReq);
+            } else {
+                // If input was a string/URL, pass the 'init' options (headers/body) directly.
+                return fetch(urlStr, init);
+            }
+        };
     }
 
     const ai = new GoogleGenAI(clientOptions);
@@ -75,6 +116,7 @@ export const expandSearchQuery = async (
 
   } catch (error) {
     console.error("Gemini Semantic Search Error:", error);
+    // If AI fails, still return the original query so the user sees results
     return [userQuery];
   }
 };
