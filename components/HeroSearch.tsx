@@ -205,7 +205,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
         ref={stickyRef}
         className={`sticky top-0 z-50 w-full transition-all duration-300 ease-in-out ${
           isStuck 
-            ? 'bg-white/80 backdrop-blur-md border-b shadow-sm py-2' 
+            ? 'bg-white/60 backdrop-blur-sm border-b shadow-sm py-2' 
             : 'bg-transparent pt-4 pb-2'
         }`}
       >
