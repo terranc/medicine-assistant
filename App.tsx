@@ -247,7 +247,7 @@ const App: React.FC = () => {
         <div className="container text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} 原研药查询助手 (Original Medicine Explorer)</p>
           <p className="mt-1">
-            数据来源: <a href="https://github.com/terranc/medicine-assistant" target="_blank" rel="noopener noreferrer" className="hover:text-primary underline underline-offset-4">GitHub (terranc/medicine-assistant)</a>
+            数据来源: <a href="https://github.com/lvwzhen/medicine" target="_blank" rel="noopener noreferrer" className="hover:text-primary underline underline-offset-4">GitHub (lvwzhen/medicine)</a>
           </p>
         </div>
       </footer>

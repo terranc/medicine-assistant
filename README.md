@@ -10,4 +10,4 @@ Web App：[https://yao.asdasd.vip](https://yao.asdasd.vip)
 
 
 
-> 数据来源：[https://github.com/terranc/medicine-assistant](https://github.com/terranc/medicine-assistant)
+> 数据来源：[https://github.com/lvwzhen/medicine](https://github.com/lvwzhen/medicine)
