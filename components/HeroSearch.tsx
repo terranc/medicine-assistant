@@ -135,7 +135,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
               原研药查询助手
             </h1>
             <p className="text-muted-foreground md:text-lg max-w-2xl mx-auto mb-6">
-              收录全面的参比制剂（RLD）信息，帮助您快速找到目标药品。
+              收录全面的进口原研药数据库，帮助您快速找到目标药品。
             </p>
 
             {/* Tags Area - Collapsible */}
@@ -215,7 +215,7 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
           }`}>
             
             {/* Mini Title - Slides in when stuck */}
-            <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] flex items-center h-10 ${
+            <div className={`overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.33,1,0.68,1)] hidden md:flex items-center h-10 ${
               isStuck ? 'w-auto opacity-100 mr-4 max-w-[200px]' : 'w-0 opacity-0 max-w-0'
             }`}>
               <h1 className="font-bold tracking-tighter text-primary text-lg whitespace-nowrap">
@@ -267,10 +267,12 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                     }`}
                   >
                     <span
-                      className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${
+                      className={`pointer-events-none flex items-center justify-center h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${
                         useAi ? 'translate-x-5' : 'translate-x-0'
                       }`}
-                    />
+                    >
+                      <span className={`text-[10px] font-bold tracking-tighter ${useAi ? 'text-primary' : 'text-muted-foreground/70'}`}>AI</span>
+                    </span>
                   </button>
                 </div>
                 

@@ -171,7 +171,7 @@ const App: React.FC = () => {
         currentBaseUrl={baseUrl}
       />
 
-      <main className="flex-1 container py-8">
+      <main className="flex-1 container px-4 md:px-6 py-8">
         {/* Status Bar */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 text-sm text-muted-foreground">
           <div>
