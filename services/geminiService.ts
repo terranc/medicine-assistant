@@ -15,57 +15,66 @@ export const expandSearchQuery = async (
     return [userQuery];
   }
 
+  // Preserve the original fetch function
+  const originalFetch = window.fetch;
+
+  // 1. Prepare the custom Base URL
+  // Moved out of try block so it is accessible in finally block
+  let customBaseUrl = baseUrl?.trim();
+  if (customBaseUrl?.endsWith('/')) {
+    customBaseUrl = customBaseUrl.slice(0, -1);
+  }
+
   try {
-    const clientOptions: any = { apiKey };
-    
-    // Normalize Base URL: remove trailing slash
-    let customBaseUrl = baseUrl?.trim();
-    if (customBaseUrl?.endsWith('/')) {
-      customBaseUrl = customBaseUrl.slice(0, -1);
-    }
-
-    // Configure client with custom baseUrl and fetch interceptor
+    // 2. Global Fetch Hijack
+    // Since the SDK might ignore clientOptions.fetch or clientOptions.baseUrl depending on the version/environment,
+    // we temporarily override window.fetch to guarantee the request is intercepted.
     if (customBaseUrl && customBaseUrl.startsWith('http')) {
-        // We set the baseUrl property for good measure, but rely on the interceptor
-        clientOptions.baseUrl = customBaseUrl;
+      window.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
+        let urlStr: string;
+        if (typeof input === 'string') {
+            urlStr = input;
+        } else if (input instanceof URL) {
+            urlStr = input.toString();
+        } else {
+            urlStr = input.url;
+        }
 
-        // Custom fetch interceptor
-        clientOptions.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-            // 1. Resolve the URL string
-            let urlStr: string;
-            if (typeof input === 'string') {
-                urlStr = input;
-            } else if (input instanceof URL) {
-                urlStr = input.toString();
-            } else {
-                urlStr = input.url;
+        // Target the official Google API domain
+        const googleHostRegex = /https?:\/\/generativelanguage\.googleapis\.com/i;
+
+        if (googleHostRegex.test(urlStr)) {
+            const oldUrl = urlStr;
+            // A. Replace Host
+            urlStr = urlStr.replace(googleHostRegex, customBaseUrl!);
+
+            // B. Ensure API Key is in Query Params
+            // Many proxies (like Cloudflare workers) require the key in the URL query string '?key=...'
+            // even if it's already in the headers.
+            const urlObj = new URL(urlStr);
+            if (!urlObj.searchParams.has('key') && apiKey) {
+                urlObj.searchParams.set('key', apiKey);
+                urlStr = urlObj.toString();
             }
 
-            // 2. Regex to match the official Google API domain (generativelanguage.googleapis.com)
-            // This is more robust than startsWith
-            const googleHostRegex = /https?:\/\/generativelanguage\.googleapis\.com/i;
+            console.log(`[Gemini Proxy] Hijacked & Redirecting:\nFrom: ${oldUrl}\nTo:   ${urlStr}`);
+        }
 
-            if (googleHostRegex.test(urlStr) && customBaseUrl) {
-                const originalUrl = urlStr;
-                // Replace the Google host with the custom Base URL
-                urlStr = urlStr.replace(googleHostRegex, customBaseUrl);
-                console.log(`[Gemini Proxy] Redirecting: ${originalUrl} -> ${urlStr}`);
-            }
-
-            // 3. Execute the fetch with the new URL
-            if (input instanceof Request) {
-                // If the input is a Request object, we MUST create a new Request with the new URL
-                // passing the old request object as the second argument copies headers, body, method, etc.
-                const newReq = new Request(urlStr, input);
-                return fetch(newReq);
-            } else {
-                // Simple string/URL input
-                return fetch(urlStr, init);
-            }
-        };
+        // C. Call Original Fetch with modified URL
+        if (input instanceof Request) {
+            // Clone the request with the new URL
+            // Passing 'input' (the old Request) copies method, headers, body, etc.
+            const newReq = new Request(urlStr, input);
+            return originalFetch(newReq);
+        } else {
+            return originalFetch(urlStr, init);
+        }
+      };
     }
 
-    const ai = new GoogleGenAI(clientOptions);
+    // 3. Initialize SDK (Standard init)
+    // We don't pass baseUrl/fetch here anymore because we are handling it globally.
+    const ai = new GoogleGenAI({ apiKey });
     const model = 'gemini-2.5-flash';
     const categoriesString = availableCategories.slice(0, 50).join(', '); 
 
@@ -88,6 +97,7 @@ export const expandSearchQuery = async (
       }
     `;
 
+    // 4. Execute Request
     const response = await ai.models.generateContent({
       model: model,
       contents: prompt,
@@ -117,7 +127,12 @@ export const expandSearchQuery = async (
 
   } catch (error) {
     console.error("Gemini Semantic Search Error:", error);
-    // If AI fails, still return the original query so the user sees results
     return [userQuery];
+  } finally {
+    // 5. CRITICAL: Restore original fetch
+    // Must happen immediately after the request finishes or fails
+    if (customBaseUrl) {
+      window.fetch = originalFetch;
+    }
   }
 };
