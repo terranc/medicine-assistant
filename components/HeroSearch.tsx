@@ -251,20 +251,28 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                   )}
                 </div>
                 
-                {/* AI Button Restored */}
-                <button
-                  type="button"
-                  onClick={handleAiToggle}
-                  className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border h-10 px-4 py-2 whitespace-nowrap ${
-                    useAi 
-                      ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20' 
-                      : 'bg-transparent border-input bg-background/50 hover:bg-accent hover:text-accent-foreground'
-                  }`}
-                >
-                  <span className="hidden sm:inline">AI 搜索</span>
-                  <span className="sm:hidden">AI</span>
-                  <span className="ml-1.5 text-xs opacity-70">{useAi ? 'ON' : 'OFF'}</span>
-                </button>
+                {/* AI Switch (Replaced Button) */}
+                <div className="flex items-center gap-2 px-1 bg-white border border-input rounded-md h-10 hover:bg-slate-50 transition-colors">
+                  <label htmlFor="ai-toggle" className={`text-sm font-medium cursor-pointer select-none pl-2 transition-colors whitespace-nowrap hidden sm:block ${useAi ? 'text-primary' : 'text-muted-foreground'}`}>
+                    AI 搜索
+                  </label>
+                  <button
+                    id="ai-toggle"
+                    type="button"
+                    role="switch"
+                    aria-checked={useAi}
+                    onClick={handleAiToggle}
+                    className={`peer inline-flex h-6 w-11 shrink-0 cursor-pointer items-center rounded-full border-2 border-transparent transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:cursor-not-allowed disabled:opacity-50 mr-1 ${
+                      useAi ? 'bg-primary' : 'bg-input'
+                    }`}
+                  >
+                    <span
+                      className={`pointer-events-none block h-5 w-5 rounded-full bg-background shadow-lg ring-0 transition-transform ${
+                        useAi ? 'translate-x-5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+                </div>
                 
                 <button
                   type="submit"
