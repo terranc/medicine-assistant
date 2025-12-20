@@ -19,22 +19,29 @@ const App: React.FC = () => {
   // Settings & API Key State
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
   const [showOnboarding, setShowOnboarding] = useState(false);
 
   // Changed from activeCategory to activeTag
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
-  // Load API Key from localStorage on mount
+  // Load API Key and Base URL from localStorage on mount
   useEffect(() => {
     const storedKey = localStorage.getItem('gemini_api_key');
+    const storedUrl = localStorage.getItem('gemini_base_url');
     if (storedKey) {
       setApiKey(storedKey);
     }
+    if (storedUrl) {
+      setBaseUrl(storedUrl);
+    }
   }, []);
 
-  const handleSaveApiKey = (key: string) => {
+  const handleSaveSettings = (key: string, url: string) => {
     setApiKey(key);
+    setBaseUrl(url);
     localStorage.setItem('gemini_api_key', key);
+    localStorage.setItem('gemini_base_url', url);
   };
 
   useEffect(() => {
@@ -83,7 +90,7 @@ const App: React.FC = () => {
       // Clear previous keywords to avoid filtering with old keywords while new query is set
       setAiKeywords([]); 
       try {
-        const keywords = await expandSearchQuery(query, categories, apiKey);
+        const keywords = await expandSearchQuery(query, categories, apiKey, baseUrl);
         setAiKeywords(keywords);
       } catch (e) {
         console.error("AI Search failed, falling back to basic");
@@ -94,7 +101,7 @@ const App: React.FC = () => {
     } else {
       setAiKeywords([]);
     }
-  }, [categories, apiKey, handleShowOnboarding]);
+  }, [categories, apiKey, baseUrl, handleShowOnboarding]);
 
   // 1. First, filter medicines based on the search query ONLY.
   // This intermediate state is used to calculate tags so that tags reflect the search results,
@@ -159,8 +166,9 @@ const App: React.FC = () => {
       <ApiKeyModal 
         isOpen={isSettingsOpen}
         onClose={() => setIsSettingsOpen(false)}
-        onSave={handleSaveApiKey}
+        onSave={handleSaveSettings}
         currentKey={apiKey}
+        currentBaseUrl={baseUrl}
       />
 
       <main className="flex-1 container py-8">
@@ -239,7 +247,7 @@ const App: React.FC = () => {
         <div className="container text-center text-sm text-muted-foreground">
           <p>© {new Date().getFullYear()} 原研药查询助手 (Original Medicine Explorer)</p>
           <p className="mt-1">
-            数据来源: <a href="https://github.com/lvwzhen/medicine" target="_blank" rel="noopener noreferrer" className="hover:text-primary underline underline-offset-4">GitHub (lvwzhen/medicine)</a>
+            数据来源: <a href="https://github.com/terranc/medicine-assistant" target="_blank" rel="noopener noreferrer" className="hover:text-primary underline underline-offset-4">GitHub (terranc/medicine-assistant)</a>
           </p>
         </div>
       </footer>

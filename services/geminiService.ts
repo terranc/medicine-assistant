@@ -7,7 +7,8 @@ import { GoogleGenAI, Type } from "@google/genai";
 export const expandSearchQuery = async (
   userQuery: string, 
   availableCategories: string[],
-  apiKey?: string
+  apiKey?: string,
+  baseUrl?: string
 ): Promise<string[]> => {
   if (!apiKey) {
     console.warn("No Gemini API Key provided. Skipping AI search.");
@@ -15,7 +16,14 @@ export const expandSearchQuery = async (
   }
 
   try {
-    const ai = new GoogleGenAI({ apiKey });
+    // If baseUrl is provided (and valid), use it; otherwise default to Google's official endpoint.
+    // The SDK allows passing baseUrl in the constructor options.
+    const clientOptions: any = { apiKey };
+    if (baseUrl && baseUrl.trim().startsWith('http')) {
+        clientOptions.baseUrl = baseUrl.trim();
+    }
+
+    const ai = new GoogleGenAI(clientOptions);
     const model = 'gemini-2.5-flash';
     const categoriesString = availableCategories.slice(0, 50).join(', '); 
 
