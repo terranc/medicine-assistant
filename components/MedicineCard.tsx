@@ -8,7 +8,7 @@ interface MedicineCardProps {
 
 export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onTagClick }) => {
   return (
-    <div className="group rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md transition-all duration-200 flex flex-col h-full">
+    <div className="group rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md hover:border-slate-600 transition-all duration-200 flex flex-col h-full">
       <div className="p-6 flex flex-col flex-1">
         {/* Header - Only render if source country exists to avoid whitespace */}
         {medicine.sourceCountry && (
@@ -84,7 +84,7 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onTagClick
                     e.stopPropagation();
                     onTagClick(tag);
                   }}
-                  className="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted/50 hover:bg-muted hover:text-foreground transition-colors cursor-pointer"
+                  className="inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground bg-muted/50 transition-colors cursor-pointer hover:bg-primary hover:text-primary-foreground hover:border-primary"
                 >
                   {tag}
                 </button>

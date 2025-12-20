@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { TagStats } from '../types';
 
 interface HeroSearchProps {
@@ -9,6 +9,8 @@ interface HeroSearchProps {
   onTagSelect: (tag: string | null) => void;
   currentQuery?: string;
   onOpenSettings: () => void;
+  hasApiKey: boolean;
+  onShowOnboarding: () => void;
 }
 
 export const HeroSearch: React.FC<HeroSearchProps> = ({ 
@@ -18,12 +20,14 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
   activeTag,
   onTagSelect,
   currentQuery = '',
-  onOpenSettings
+  onOpenSettings,
+  hasApiKey,
+  onShowOnboarding
 }) => {
   const [query, setQuery] = useState(currentQuery);
   const [useAi, setUseAi] = useState(false);
   const [isStuck, setIsStuck] = useState(false);
-  const [showAllTags, setShowAllTags] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
   const stickyRef = useRef<HTMLDivElement>(null);
 
   // Sync local state when parent state changes
@@ -54,13 +58,20 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
     onSearch(query, useAi);
   };
 
-  const visibleTags = useMemo(() => {
-    if (showAllTags) return tags;
-    // Always show tags with >= 5 count OR the currently active tag (so it doesn't disappear)
-    return tags.filter(tag => tag.count >= 5 || tag.name === activeTag);
-  }, [tags, showAllTags, activeTag]);
+  const handleAiToggle = () => {
+    // If trying to turn ON, but no API Key is set
+    if (!useAi && !hasApiKey) {
+      onShowOnboarding();
+      return; // Keep state as OFF
+    }
+    setUseAi(!useAi);
+  };
 
-  const hiddenCount = tags.length - visibleTags.length;
+  // New handler for clearing search
+  const handleClear = () => {
+    setQuery('');
+    onSearch('', useAi);
+  };
 
   return (
     <>
@@ -83,60 +94,67 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
             <h1 className="text-3xl md:text-4xl font-bold tracking-tighter sm:text-5xl text-primary mb-4">
               原研药查询助手
             </h1>
-            {/* 
-            <p className="text-muted-foreground md:text-lg max-w-2xl mx-auto mb-6">
-              收录全面的参比制剂（RLD）信息。支持基于 AI 的语义模糊搜索，帮助您快速找到目标药品。
-            </p> 
-            */}
             <p className="text-muted-foreground md:text-lg max-w-2xl mx-auto mb-6">
               收录全面的参比制剂（RLD）信息，帮助您快速找到目标药品。
             </p>
 
-            {/* Tags Area - Now Above Search */}
-            <div className="flex flex-col items-center gap-2 w-full max-w-7xl mx-auto">
-              <div className="flex flex-wrap justify-center gap-2">
+            {/* Tags Area - Collapsible */}
+            <div className="flex flex-col items-center w-full max-w-5xl mx-auto">
+              {/* 
+                  Max-height logic: 
+                  Approx height of one tag row (22px tag + 8px gap) = 30px.
+                  3 lines = ~90px. 
+                  Setting max-h-[86px] to constrain to 3 lines comfortably.
+              */}
+              <div 
+                className={`flex flex-wrap justify-center gap-2 overflow-hidden transition-all duration-500 ease-in-out ${
+                  isExpanded ? 'max-h-[1000px]' : 'max-h-[86px]'
+                }`}
+              >
                 <button
                   onClick={() => onTagSelect(null)}
-                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer ${
+                  className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none cursor-pointer h-[22px] ${
                     activeTag === null
-                      ? 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80' 
-                      : 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                      ? 'border-transparent bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm' 
+                      : 'border-transparent bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground'
                   }`}
                 >
                   全部
                 </button>
-                {visibleTags.map((tag) => (
+                {tags.map((tag) => (
                   <button
                     key={tag.name}
                     onClick={() => onTagSelect(tag.name)}
-                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 cursor-pointer ${
+                    className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none cursor-pointer h-[22px] ${
                       activeTag === tag.name
-                        ? 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80' 
-                        : 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80'
+                        ? 'border-transparent bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm' 
+                        : 'border-transparent bg-secondary text-secondary-foreground hover:bg-primary hover:text-primary-foreground'
                     }`}
                   >
                     {tag.name} <span className="ml-1 opacity-60 text-[10px]">({tag.count})</span>
                   </button>
                 ))}
-                
-                {!showAllTags && hiddenCount > 0 && (
-                  <button
-                    onClick={() => setShowAllTags(true)}
-                    className="inline-flex items-center rounded-full border border-dashed border-slate-300 px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-slate-400 transition-colors cursor-pointer"
-                  >
-                    展开更多...
-                  </button>
-                )}
-                
-                {showAllTags && tags.length > visibleTags.length && (hiddenCount === 0) && (
-                   <button
-                    onClick={() => setShowAllTags(false)}
-                    className="inline-flex items-center rounded-full border border-dashed border-slate-300 px-2.5 py-0.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-slate-400 transition-colors cursor-pointer"
-                  >
-                    收起
-                  </button>
-                )}
               </div>
+
+              {/* Toggle Button - Only show if there are enough tags to likely warrant collapsing */}
+              {tags.length > 12 && (
+                <button
+                  onClick={() => setIsExpanded(!isExpanded)}
+                  className="mt-2 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-primary transition-colors cursor-pointer p-1"
+                >
+                  {isExpanded ? (
+                    <>
+                      收起
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m18 15-6-6-6 6"/></svg>
+                    </>
+                  ) : (
+                    <>
+                      展开更多标签 ({tags.length})
+                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m6 9 6 6 6-6"/></svg>
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -175,14 +193,28 @@ export const HeroSearch: React.FC<HeroSearchProps> = ({
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
                     placeholder={useAi ? "描述症状或用途 (例如: '胃痛', '高血压')..." : "输入药品名称、通用名或厂家..."}
-                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 pl-9 pr-8 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
                   />
+                  {query && (
+                    <button
+                      type="button"
+                      onClick={handleClear}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground/60 hover:text-foreground p-0.5 transition-colors cursor-pointer"
+                      title="清空输入"
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="m15 9-6 6" />
+                        <path d="m9 9 6 6" />
+                      </svg>
+                    </button>
+                  )}
                 </div>
                 
                 {/* AI Button Restored */}
                 <button
                   type="button"
-                  onClick={() => setUseAi(!useAi)}
+                  onClick={handleAiToggle}
                   className={`inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 border h-10 px-4 py-2 whitespace-nowrap ${
                     useAi 
                       ? 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20' 

@@ -53,7 +53,11 @@ const App: React.FC = () => {
   }, []);
 
   const categories = useMemo(() => extractCategories(medicines), [medicines]);
-  const tags = useMemo(() => extractTags(medicines), [medicines]);
+  
+  const handleShowOnboarding = useCallback(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setShowOnboarding(true);
+  }, []);
 
   const handleSearch = useCallback(async (query: string, useAi: boolean) => {
     setSearchQuery(query);
@@ -66,12 +70,11 @@ const App: React.FC = () => {
 
     if (useAi) {
       if (!apiKey) {
-        // If AI is enabled but no key, show onboarding overlay
-        // Scroll to top to ensure the settings button is visible
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        setShowOnboarding(true);
+        // Double safety: If code reaches here (e.g. Enter pressed while AI somehow ON but no key),
+        // show onboarding and fallback.
+        handleShowOnboarding();
         
-        // Fallback to normal search (we don't clear setIsAiSearchMode because we want to indicate intent)
+        // Fallback to normal search
         setAiKeywords([query]);
         return;
       }
@@ -91,42 +94,49 @@ const App: React.FC = () => {
     } else {
       setAiKeywords([]);
     }
-  }, [categories, apiKey]);
+  }, [categories, apiKey, handleShowOnboarding]);
 
-  const filteredMedicines = useMemo(() => {
+  // 1. First, filter medicines based on the search query ONLY.
+  // This intermediate state is used to calculate tags so that tags reflect the search results,
+  // but selecting a tag doesn't cause the tag list (counts) to change or disappear.
+  const medicinesFilteredByQuery = useMemo(() => {
+    if (!searchQuery.trim()) {
+      return medicines;
+    }
+
     let result = medicines;
-
-    // 1. Filter by Active Tag
-    if (activeTag) {
-      result = result.filter(m => m.tags.includes(activeTag));
+    const lowerQuery = searchQuery.toLowerCase();
+    
+    if (isAiSearchMode && aiKeywords.length > 0) {
+      // AI Mode: Any of the AI keywords match any relevant field
+      result = result.filter(m => {
+        const tagsStr = m.tags.join(' ');
+        const text = `${m.genericName} ${m.brandName} ${m.category} ${m.company} ${m.specification} ${tagsStr}`.toLowerCase();
+        // Match if the medicine text contains ANY of the AI-generated keywords
+        return aiKeywords.some(keyword => text.includes(keyword.toLowerCase()));
+      });
+    } else {
+      // Strict Mode: Exact substring match
+      result = result.filter(m => 
+        m.genericName.toLowerCase().includes(lowerQuery) ||
+        m.brandName.toLowerCase().includes(lowerQuery) ||
+        m.company.toLowerCase().includes(lowerQuery) ||
+        m.category.toLowerCase().includes(lowerQuery) ||
+        m.tags.some(t => t.toLowerCase().includes(lowerQuery))
+      );
     }
-
-    // 2. Filter by Search
-    if (searchQuery.trim()) {
-      const lowerQuery = searchQuery.toLowerCase();
-      
-      if (isAiSearchMode && aiKeywords.length > 0) {
-        // AI Mode: Any of the AI keywords match any relevant field
-        result = result.filter(m => {
-          const tagsStr = m.tags.join(' ');
-          const text = `${m.genericName} ${m.brandName} ${m.category} ${m.company} ${m.specification} ${tagsStr}`.toLowerCase();
-          // Match if the medicine text contains ANY of the AI-generated keywords
-          return aiKeywords.some(keyword => text.includes(keyword.toLowerCase()));
-        });
-      } else {
-        // Strict Mode: Exact substring match
-        result = result.filter(m => 
-          m.genericName.toLowerCase().includes(lowerQuery) ||
-          m.brandName.toLowerCase().includes(lowerQuery) ||
-          m.company.toLowerCase().includes(lowerQuery) ||
-          m.category.toLowerCase().includes(lowerQuery) ||
-          m.tags.some(t => t.toLowerCase().includes(lowerQuery))
-        );
-      }
-    }
-
     return result;
-  }, [medicines, activeTag, searchQuery, isAiSearchMode, aiKeywords]);
+  }, [medicines, searchQuery, isAiSearchMode, aiKeywords]);
+
+  // 2. Generate Tags based on the query results. 
+  // This ensures tags are relevant to the search, but independent of the active tag selection.
+  const tags = useMemo(() => extractTags(medicinesFilteredByQuery), [medicinesFilteredByQuery]);
+
+  // 3. Final Filter: Apply the active tag to the query results.
+  const filteredMedicines = useMemo(() => {
+    if (!activeTag) return medicinesFilteredByQuery;
+    return medicinesFilteredByQuery.filter(m => m.tags.includes(activeTag));
+  }, [medicinesFilteredByQuery, activeTag]);
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50/50">
@@ -138,6 +148,8 @@ const App: React.FC = () => {
         onTagSelect={setActiveTag}
         currentQuery={searchQuery}
         onOpenSettings={() => setIsSettingsOpen(true)}
+        hasApiKey={!!apiKey}
+        onShowOnboarding={handleShowOnboarding}
       />
 
       {showOnboarding && (
