@@ -23,12 +23,12 @@ export const MedicineCard: React.FC<MedicineCardProps> = ({ medicine, onTagClick
         <div className="mb-4">
           <h3 className="font-semibold leading-snug tracking-tight text-lg mb-1.5 text-primary">
             <a 
-              href={`https://zh.wikipedia.org/wiki/${encodeURIComponent(medicine.genericName)}`}
+              href={`https://baike.baidu.com/item/${encodeURIComponent(medicine.genericName)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-blue-600 hover:underline decoration-blue-600/30 underline-offset-4 transition-colors inline-flex items-center gap-1"
               onClick={(e) => e.stopPropagation()}
-              title="查看维基百科"
+              title="查看百度百科"
             >
               {medicine.genericName}
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="opacity-0 group-hover:opacity-50 transition-opacity">

@@ -2,6 +2,9 @@
 
 Google AI Studio: [https://ai.studio/apps/drive/19nRkF74_lhhisrLn8mh7a7HhB_A4iU9x](https://ai.studio/apps/drive/19nRkF74_lhhisrLn8mh7a7HhB_A4iU9x)
 
-![屏幕截图_20-12-2025_35757_aistudio google com](https://github.com/user-attachments/assets/2b6bbcfd-f8ab-4d9c-907d-dbe4c2f67d00)
+## 截图：
+<img width="2330" height="1992" alt="ScreenShot_2025-12-20_112948_640" src="https://github.com/user-attachments/assets/b66a3e4c-e428-4e2c-adaa-de892477de4e" />
+<img width="1436" height="930" alt="ScreenShot_2025-12-20_112812_728" src="https://github.com/user-attachments/assets/fad87874-66f4-40b8-ac12-df2760b7f0de" />
+
 
 > 数据来源：[https://github.com/terranc/medicine-assistant](https://github.com/terranc/medicine-assistant)
