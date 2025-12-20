@@ -83,7 +83,7 @@ export const ApiKeyModal: React.FC<ApiKeyModalProps> = ({ isOpen, onClose, onSav
             </div>
             
             <div className="text-xs text-muted-foreground bg-slate-50 p-3 rounded border">
-              没有 Key? <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">点击这里免费获取</a>
+              没有 Key? <a href="https://privnode.com/ref/uZLF" target="_blank" rel="noopener noreferrer" className="text-primary underline underline-offset-2">点击这里免费获取</a>
             </div>
           </div>
         </div>
