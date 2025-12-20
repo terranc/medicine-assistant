@@ -26,14 +26,12 @@ export const expandSearchQuery = async (
 
     // Configure client with custom baseUrl and fetch interceptor
     if (customBaseUrl && customBaseUrl.startsWith('http')) {
-        // 1. Set the baseUrl property (Standard SDK support)
+        // We set the baseUrl property for good measure, but rely on the interceptor
         clientOptions.baseUrl = customBaseUrl;
 
-        // 2. Add a robust fetch interceptor (Fallback/Enforcement)
-        // This ensures that even if the SDK ignores 'baseUrl' or constructs absolute URLs internally,
-        // we intercept the network call and rewrite the host.
+        // Custom fetch interceptor
         clientOptions.fetch = async (input: RequestInfo | URL, init?: RequestInit) => {
-            // Determine the current URL string
+            // 1. Resolve the URL string
             let urlStr: string;
             if (typeof input === 'string') {
                 urlStr = input;
@@ -43,22 +41,25 @@ export const expandSearchQuery = async (
                 urlStr = input.url;
             }
 
-            // Check if the request is targeting the official Google API
-            const defaultHost = 'https://generativelanguage.googleapis.com';
-            if (urlStr.startsWith(defaultHost) && customBaseUrl) {
-                // Replace the official host with the custom proxy host
-                urlStr = urlStr.replace(defaultHost, customBaseUrl);
+            // 2. Regex to match the official Google API domain (generativelanguage.googleapis.com)
+            // This is more robust than startsWith
+            const googleHostRegex = /https?:\/\/generativelanguage\.googleapis\.com/i;
+
+            if (googleHostRegex.test(urlStr) && customBaseUrl) {
+                const originalUrl = urlStr;
+                // Replace the Google host with the custom Base URL
+                urlStr = urlStr.replace(googleHostRegex, customBaseUrl);
+                console.log(`[Gemini Proxy] Redirecting: ${originalUrl} -> ${urlStr}`);
             }
 
-            // Perform the fetch with the new URL
+            // 3. Execute the fetch with the new URL
             if (input instanceof Request) {
-                // Critical: If input is a Request object, we must clone it to preserve
-                // method (POST), headers (Auth), and body (JSON payload).
-                // Passing 'input' as the second argument to Request constructor copies these properties.
+                // If the input is a Request object, we MUST create a new Request with the new URL
+                // passing the old request object as the second argument copies headers, body, method, etc.
                 const newReq = new Request(urlStr, input);
                 return fetch(newReq);
             } else {
-                // If input was a string/URL, pass the 'init' options (headers/body) directly.
+                // Simple string/URL input
                 return fetch(urlStr, init);
             }
         };
